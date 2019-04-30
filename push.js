@@ -8,6 +8,12 @@ const {TaskQueue} = require('cwait')
 
 const MAX_SIMULTANEOUS_DOWNLOADS = 3
 
+const config = {
+  importAirline: false,
+  importRoute: false,
+  importFlight: true
+}
+
 dotenv.config()
 const {API, SECRET, EVENT_ID} = process.env
 
@@ -99,11 +105,10 @@ async function sendFlightData(flight) {
 
 const queue = new TaskQueue(Promise, MAX_SIMULTANEOUS_DOWNLOADS)
 
-
 ;(async () => {
   await Promise.all(
-    [flights.map(queue.wrap(async flight => await sendFlightData(flight))),
-    routes.map(queue.wrap(async route => await sendRouteData(route))),
-    airlines.map(queue.wrap(async airline => await sendAirlineData(airline))),]
+    [config.importFlight ? flights.map(queue.wrap(async flight => await sendFlightData(flight))) : null,
+    config.importRoute ? routes.map(queue.wrap(async route => await sendRouteData(route))) : null,
+    config.importAirline ? airlines.map(queue.wrap(async airline => await sendAirlineData(airline))) : null,]
   )
 })()
