@@ -11,7 +11,8 @@ const MAX_SIMULTANEOUS_DOWNLOADS = 3
 const config = {
   importAirline: false,
   importRoute: false,
-  importFlight: true
+  importFlightDep: true,
+  importFlightArr: true
 }
 
 dotenv.config()
@@ -19,7 +20,8 @@ const {API, SECRET, EVENT_ID} = process.env
 
 const startAt = 0;
 
-const flights = JSON.parse(fs.readFileSync('json/Flight.json', 'utf8'))
+const flightsDep = JSON.parse(fs.readFileSync('json/Flight-Dep.json', 'utf8'))
+const flightsArr = JSON.parse(fs.readFileSync('json/Flight-Arr.json', 'utf8'))
 const routes = JSON.parse(fs.readFileSync('json/Route.json', 'utf8'))
 const airlines= JSON.parse(fs.readFileSync('json/Airline.json', 'utf8'))
 
@@ -66,7 +68,7 @@ async function sendRouteData(route) {
   }
 }
 
-async function sendFlightData(flight) {
+async function sendFlightData(flight, type) {
   console.log('Processing flight: ' + flight.flight)
 
   try {
@@ -77,7 +79,8 @@ async function sendFlightData(flight) {
       },
       flight: {
         name: flight.flight,
-        type: flight.type,
+        type: type,
+        aircraft: flight.aircraft,
         distance: flight.distance,
         airline: {
           code: flight.airline.code,
@@ -102,7 +105,7 @@ async function sendFlightData(flight) {
     return out.data
   } catch (err) {
     console.log('Failed to process flight: ' + flight.flight)
-    console.log(err.response.data)
+    console.log(err.response.data.response.data.errors)
     return err.response.data
   }
 }
@@ -111,7 +114,8 @@ const queue = new TaskQueue(Promise, MAX_SIMULTANEOUS_DOWNLOADS)
 
 ;(async () => {
   await Promise.all(
-    [config.importFlight ? flights.map(queue.wrap(async flight => await sendFlightData(flight))) : null,
+    [config.importFlightDep ? flightsDep.map(queue.wrap(async flight => await sendFlightData(flight, 'dep'))) : null,
+    config.importFlightArr ? flightsArr.map(queue.wrap(async flight => await sendFlightData(flight, 'arr'))) : null,
     config.importRoute ? routes.map(queue.wrap(async route => await sendRouteData(route))) : null,
     config.importAirline ? airlines.map(queue.wrap(async airline => await sendAirlineData(airline))) : null,]
   )

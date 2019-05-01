@@ -4,16 +4,19 @@ const _ = require('lodash')
 
 const airlines = []
 const routes = []
-const flights = []
+const flightsDep = []
+const flightsArr = []
 
 const inDir = 'data/'
 const outDir = 'json/'
 
 const fileAirlines = 'Airline'
 const fileRoutes = 'Route'
-const fileFlights = ['VTBS-Arrival', 'VTBS-Departure']
+const fileFlightsDep = ['VTBS-Departure']
+const fileFlightsArr = ['VTBS-Arrival']
 
-let flightsImported = 0
+let flightsDepImported = 0
+let flightsArrImported = 0
 
 // Process
 
@@ -69,13 +72,13 @@ lineReader.eachLine(inDir + fileRoutes + '.csv', (line, last) => {
   }
 })
 
-fileFlights.map((file, i) => {
+fileFlightsDep.map((file, i) => {
   lineReader.eachLine(inDir + file + '.csv', (line, last) => {
     const chunk = _.split(line, ',')
 
-    flights.push({
+    flightsDep.push({
       flight: chunk[1],
-      type: chunk[2],
+      aircraft: chunk[2],
       distance: chunk[7],
       airline: {
         code: !chunk[0] ? null : chunk[0],
@@ -96,13 +99,56 @@ fileFlights.map((file, i) => {
     })
 
     if (last) {
-      flightsImported++;
+      flightsDepImported++;
     }
 
-    if (flightsImported == fileFlights.length) {
-      console.log('Writing file Flight')
+    if (flightsDepImported == fileFlightsDep.length) {
+      console.log('Writing file Flight DEP')
 
-      fs.writeFile(outDir + 'Flight.json', JSON.stringify(flights), function(err) {
+      fs.writeFile(outDir + 'Flight-Dep.json', JSON.stringify(flightsDep), function(err) {
+        if (err) {
+          console.error(err)
+          reject(err)
+        }
+      })
+    }
+  })
+})
+
+fileFlightsArr.map((file, i) => {
+  lineReader.eachLine(inDir + file + '.csv', (line, last) => {
+    const chunk = _.split(line, ',')
+
+    flightsArr.push({
+      flight: chunk[1],
+      aircraft: chunk[2],
+      distance: chunk[7],
+      airline: {
+        code: !chunk[0] ? null : chunk[0],
+      },
+      airport: {
+        departure: chunk[3],
+        arrival: chunk[4],
+      },
+      bay: {
+        departure: !chunk[9] ? null : chunk[9],
+        arrival: !chunk[10] ? null : chunk[10],
+      },
+      time: {
+        departure: chunk[5],
+        arrival: chunk[6],
+        total: chunk[8],
+      },
+    })
+
+    if (last) {
+      flightsArrImported++;
+    }
+
+    if (flightsArrImported == fileFlightsArr.length) {
+      console.log('Writing file Flight ARR')
+
+      fs.writeFile(outDir + 'Flight-Arr.json', JSON.stringify(flightsArr), function(err) {
         if (err) {
           console.error(err)
           reject(err)
