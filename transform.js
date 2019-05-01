@@ -78,11 +78,15 @@ fileFlights.map((file, i) => {
       type: chunk[2],
       distance: chunk[7],
       airline: {
-        code: chunk[0],
+        code: !chunk[0] ? null : chunk[0],
       },
       airport: {
         departure: chunk[3],
         arrival: chunk[4],
+      },
+      bay: {
+        departure: !chunk[9] ? null : chunk[9],
+        arrival: !chunk[10] ? null : chunk[10],
       },
       time: {
         departure: chunk[5],

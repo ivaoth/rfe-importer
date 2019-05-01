@@ -86,6 +86,10 @@ async function sendFlightData(flight) {
           departure: flight.airport.departure,
           arrival: flight.airport.arrival,
         },
+        bay: {
+          departure: flight.bay.departure,
+          arrival: flight.bay.arrival,
+        },
         time: {
           departure: flight.time.departure,
           arrival: flight.time.arrival,
